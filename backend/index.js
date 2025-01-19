@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const bootstrap = require("./src/app.controller.js");
+const bootstrap = require("./src/app.js");
 const express = require("express");
 
 const app = express();

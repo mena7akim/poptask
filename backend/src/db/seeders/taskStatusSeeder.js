@@ -1,5 +1,5 @@
 // src/seeders/seedTaskStatus.js
-const { TaskStatus } = require("../models");
+const { TaskStatus } = require("../../models");
 
 async function seedTaskStatus() {
   const statuses = ["Pending", "In Progress", "Completed"];

@@ -1,6 +1,6 @@
 // src/models/TaskAssignee.js
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../connection");
+const { sequelize } = require("../db/connection");
 const Task = require("./task");
 const User = require("./user");
 
@@ -52,7 +52,6 @@ const TaskAssignee = sequelize.define(
   }
 );
 
-// Associations
 Task.belongsToMany(User, {
   through: TaskAssignee,
   foreignKey: "taskId",

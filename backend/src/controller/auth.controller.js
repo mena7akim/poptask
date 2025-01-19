@@ -1,12 +1,12 @@
-const { asyncHandler } = require("../../utils/error/errorHandling");
+const { asyncHandler } = require("../utils/error/errorHandling");
 const bcrypt = require("bcrypt");
-const User = require("../../db/models/user");
-const sendEmail = require("../../utils/email/sendEmail");
+const { User } = require("../models");
+const sendEmail = require("../utils/email/sendEmail");
 const {
   generateJWT,
   generateRandomToken,
-} = require("../../utils/security/generateToken");
-const { successResponse } = require("../../utils/response/successResponse");
+} = require("../utils/security/generateToken");
+const { successResponse } = require("../utils/response/successResponse");
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -151,12 +151,11 @@ const passwordReset = asyncHandler(async (req, res, next) => {
   const { email, token, newPassword } = req.body;
 
   if (!email || !token || !newPassword) {
-    next(
+    return next(
       new Error("Please provide email, token, and new password.", {
         cause: 400,
       })
     );
-    return;
   }
 
   const user = await User.findOne({
@@ -168,8 +167,9 @@ const passwordReset = asyncHandler(async (req, res, next) => {
   });
 
   if (!user) {
-    next(new Error("Invalid or expired password reset token.", { cause: 400 }));
-    return;
+    return next(
+      new Error("Invalid or expired password reset token.", { cause: 400 })
+    );
   }
 
   // Update password

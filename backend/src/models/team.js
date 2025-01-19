@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../connection");
+const { sequelize } = require("../db/connection");
 
 const Team = sequelize.define(
   "Team",
@@ -13,17 +13,30 @@ const Team = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
       unique: true,
+      validate: {
+        notNull: {
+          msg: "name can't be null",
+        },
+      },
     },
     icon: {
       type: DataTypes.STRING(255),
-      allowNull: true,
+      allowNull: false,
       validate: {
         isUrl: true,
+        notNull: {
+          msg: "icon can't be null",
+        },
       },
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: "description can't be null",
+        },
+      },
     },
     deletedAt: {
       type: DataTypes.DATE,

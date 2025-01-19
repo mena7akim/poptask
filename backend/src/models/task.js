@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../connection");
+const { sequelize } = require("../db/connection");
 const Project = require("./project");
 const TaskStatus = require("./taskStatus");
 
@@ -67,7 +67,6 @@ const Task = sequelize.define(
   }
 );
 
-// Associations
 Project.hasMany(Task, { foreignKey: "projectId", onDelete: "CASCADE" });
 Task.belongsTo(Project, { foreignKey: "projectId" });
 

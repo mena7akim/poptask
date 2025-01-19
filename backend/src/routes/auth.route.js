@@ -6,7 +6,7 @@ const {
   requestPasswordReset,
   passwordReset,
   confirmEmail,
-} = require("./auth.service");
+} = require("../controller/auth.controller");
 
 router.post("/register", register);
 router.post("/login", login);

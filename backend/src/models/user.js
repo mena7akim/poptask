@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../connection");
+const { sequelize } = require("../db/connection");
 const bcrypt = require("bcrypt");
 
 const User = sequelize.define(
@@ -24,7 +24,7 @@ const User = sequelize.define(
       allowNull: false,
       validate: {
         notNull: true,
-      }, 
+      },
     },
     firstName: {
       type: DataTypes.STRING(255),
