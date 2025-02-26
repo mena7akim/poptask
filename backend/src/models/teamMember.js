@@ -40,14 +40,14 @@ const TeamMember = sequelize.define(
       onDelete: "CASCADE",
     },
     permissions: {
-      type: DataTypes.ENUM("admin", "editor", "viewer"),
+      type: DataTypes.ENUM("admin", "tasker"),
       allowNull: false,
       validate: {
         notNull: {
           msg: "permissions can't be null",
         },
       },
-      defaultValue: "viewer",
+      defaultValue: "tasker",
     },
     createdAt: {
       type: DataTypes.DATE,

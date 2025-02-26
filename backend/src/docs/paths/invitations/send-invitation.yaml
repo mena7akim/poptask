@@ -1,0 +1,102 @@
+tags:
+  - Invitations
+summary: "Send an invitation to join a team"
+description: "Send an invitation to a user to join a team. Requires a valid JWT token in the Authorization header."
+security:
+  - BearerAuth: []
+parameters:
+  - name: teamId
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: The ID of the team.
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - teamId
+          - email
+        properties:
+          teamId:
+            type: integer
+            description: The ID of the team to which the user is being invited.
+            example: 1
+          email:
+            type: string
+            format: email
+            description: The email address of the user being invited.
+            example: "user@example.com"
+responses:
+  "200":
+    description: "Invitation sent successfully."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "User has been invited successfully."
+  "400":
+    description: "Bad request. The user is already a member of the team or has already been invited."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "This user is already on the team."
+  "401":
+    description: "Unauthorized. No valid JWT token provided or user not found."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Please login so you can access this!"
+  "404":
+    description: "Not found. The user does not exist."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "This user does not exist."
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

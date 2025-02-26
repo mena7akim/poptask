@@ -35,20 +35,14 @@ const createTeam = async (req, res, next) => {
     // Commit the transaction
     await transaction.commit();
 
-    // Retrieve the team with members
-    const createdTeam = await Team.findOne({
-      where: { id: newTeam.id },
-      include: [
-        {
-          model: TeamMember,
-          include: [User],
-        },
-      ],
-    });
-
-    return successResponse(res, {
-      message: "Team have been created successfully.",
-    });
+    return successResponse(
+      res,
+      {
+        message: "Team have been created successfully.",
+        data: newTeam,
+      },
+      201
+    );
   } catch (error) {
     // Rollback the transaction in case of error
     await transaction.rollback();

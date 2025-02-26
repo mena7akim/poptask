@@ -1,0 +1,57 @@
+/auth/request-login:
+  post:
+    $ref: "./auth/request-login.yaml"
+/auth/login:
+  post:
+    $ref: "./auth/login.yaml"
+/auth/register:
+  post:
+    $ref: "./auth/register.yaml"
+/auth/password-reset:
+  post:
+    $ref: "./auth/password-reset.yaml"
+/auth/request-password-reset:
+  post:
+    $ref: "./auth/request-password-reset.yaml"
+
+/users:
+  post:
+    $ref: "./users/create-profile.yaml"
+  put:
+    $ref: "./users/update-profile.yaml"
+
+/teams:
+  post:
+    $ref: "./teams/create-team.yaml"
+  get:
+    $ref: "./teams/get-teams.yaml"
+
+/invitations:
+  get:
+    $ref: "./invitations/get-invitations.yaml"
+
+/invitations/{teamId}:
+  post:
+    $ref: "./invitations/send-invitation.yaml"
+
+/invitations/{invitationId}/accept:
+  post:
+    $ref: "./invitations/accept-invitation.yaml"
+
+/invitations/{invitationId}/reject:
+  post:
+    $ref: "./invitations/reject-invitation.yaml"
+
+/projects/{teamId}:
+  post:
+    $ref: "./projects/create-project.yaml"
+  get:
+    $ref: "./projects/get-projects.yaml"
+
+/projects/{teamId}/{projectId}:
+  put:
+    $ref: "./projects/update-project.yaml"
+  get:
+    $ref: "./projects/get-project.yaml"
+  delete:
+    $ref: "./projects/delete-project.yaml"

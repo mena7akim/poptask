@@ -1,5 +1,5 @@
 const { Sequelize } = require("sequelize");
-const dbConfig = require("../config/dbConfig")["development"];
+const dbConfig = require("../config/db.config")["development"];
 const { username, password, database, host, port, dialect } = dbConfig;
 const sequelize = new Sequelize(database, username, password, {
   host: host,
@@ -18,7 +18,7 @@ const connectDB = async () => {
 
 const syncTables = async () => {
   try {
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ force: false });
   } catch (error) {
     console.error("Error while syncing tables: ", error);
   }

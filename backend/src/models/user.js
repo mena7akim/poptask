@@ -21,51 +21,27 @@ const User = sequelize.define(
     },
     password: {
       type: DataTypes.STRING(255),
-      allowNull: false,
-      validate: {
-        notNull: true,
-      },
     },
     firstName: {
       type: DataTypes.STRING(255),
-      allowNull: false,
     },
     lastName: {
       type: DataTypes.STRING(255),
-      allowNull: false,
     },
     profileImage: {
       type: DataTypes.STRING(255),
-      allowNull: true,
       validate: {
         isUrl: true,
       },
     },
-    emailConfirmed: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-    emailConfirmationToken: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    resetPasswordToken: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    resetPasswordExpires: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
     deletedAt: {
       type: DataTypes.DATE,
-      allowNull: true,
     },
   },
   {
     tableName: "Users",
-    timestamps: true, // Adds createdAt and updatedAt
-    paranoid: true, // Enables soft deletes (deletedAt)
+    timestamps: true,
+    paranoid: true,
     hooks: {
       beforeCreate: async (user, options) => {
         if (user.password) {
@@ -78,6 +54,16 @@ const User = sequelize.define(
           const saltRounds = 8;
           user.password = await bcrypt.hash(user.password, saltRounds);
         }
+      },
+    },
+    defaultScope: {
+      attributes: {
+        exclude: ["password", "deletedAt"],
+      },
+    },
+    scopes: {
+      withPassword: {
+        exclude: ["deletedAt"],
       },
     },
   }

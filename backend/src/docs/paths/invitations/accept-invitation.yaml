@@ -1,0 +1,84 @@
+tags:
+  - Invitations
+summary: "Accept an invitation to join a team"
+description: "Accept an invitation to join a team. Requires a valid JWT token in the Authorization header."
+security:
+  - BearerAuth: []
+parameters:
+  - name: invitationId
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: The ID of the invitation to accept.
+responses:
+  "200":
+    description: "Invitation accepted successfully."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "You have joined the team successfully."
+  "400":
+    description: "Bad request. The invitation is expired or does not exist, or the user cannot accept the invitation."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "You can't accept or reject this invitation."
+  "401":
+    description: "Unauthorized. No valid JWT token provided or user not found."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Please login so you can access this!"
+  "404":
+    description: "Not found. The invitation is expired or does not exist."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Invitation is expired or not exist."
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

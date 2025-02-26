@@ -1,0 +1,27 @@
+type: object
+description: Represents an invitation sent to a user to join a team.
+required:
+  - teamId
+  - inviteeEmail
+  - expiresAt
+properties:
+  id:
+    type: integer
+    format: int32
+    description: The unique identifier for the invitation.
+    example: 1
+  teamId:
+    type: integer
+    format: int32
+    description: The ID of the team to which the user is being invited.
+    example: 10
+  inviteeEmail:
+    type: string
+    format: email
+    maxLength: 255
+    description: The email address of the user being invited.
+    example: user@example.com
+example:
+  id: 1
+  teamId: 10
+  inviteeEmail: user@example.com

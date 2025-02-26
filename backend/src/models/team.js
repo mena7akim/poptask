@@ -12,7 +12,6 @@ const Team = sequelize.define(
     name: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      unique: true,
       validate: {
         notNull: {
           msg: "name can't be null",
@@ -47,6 +46,16 @@ const Team = sequelize.define(
     tableName: "Teams",
     timestamps: true,
     paranoid: true,
+    defaultScope: {
+      attributes: {
+        exclude: ["deletedAt", "createdAt", "updatedAt"],
+      },
+    },
+    scopes: {
+      withTimeStamps: {
+        attributes: {},
+      },
+    },
   }
 );
 

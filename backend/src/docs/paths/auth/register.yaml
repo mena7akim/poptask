@@ -1,0 +1,91 @@
+tags:
+  - Auth
+summary: "Register"
+description: "Register with email and OTP, or login if user is already registered."
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - email
+          - otp
+        properties:
+          email:
+            type: string
+          otp:
+            type: string
+        example:
+          email: example@gmail.com
+          otp: 123456
+responses:
+  "200":
+    description: "Login successful. in case that user is already registered."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "User logged in successfully."
+                data:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjYwZjQwZjQwZjQwZjQwZjQwZjQwZjQiLCJlbWFpbCI6ImV4YW1wbGVAZ21haWwuY29tIiwiaWF0IjoxNjI5MzQwNjQ4LCJleHAiOjE2MjkzNDQyNDh9.7"
+                    user:
+                      $ref: "../../components/User.yaml"
+  "201":
+    description: "Registration successful."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "User created successfully."
+                data:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjYwZjQwZjQwZjQwZjQwZjQwZjQwZjQiLCJlbWFpbCI6ImV4YW1wbGVAZ21haWwuY29tIiwiaWF0IjoxNjI5MzQwNjQ4LCJleHAiOjE2MjkzNDQyNDh9.7"
+                    user:
+                      $ref: "../../components/User.yaml"
+  "400":
+    description: "Bad request."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "This otp is invalid or expired."
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

@@ -1,0 +1,20 @@
+schemas:
+  User:
+    $ref: "./User.yaml"
+  Project:
+    $ref: "./Project.yaml"
+  Task:
+    $ref: "./Task.yaml"
+  Team:
+    $ref: "./Team.yaml"
+  TeamMember:
+    $ref: "./TeamMember.yaml"
+  Invitation:
+    $ref: "./Invitation.yaml"
+  InternalServerError:
+    $ref: "./InternalServerError.yaml"
+securitySchemes:
+  BearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT

@@ -1,0 +1,31 @@
+type: object
+description: A team within the organization.
+required:
+  - name
+  - icon
+  - description
+properties:
+  id:
+    type: integer
+    format: int32
+    description: The unique identifier for the team.
+    example: 1
+  name:
+    type: string
+    maxLength: 255
+    description: The name of the team. Must be unique.
+    example: Engineering Team
+  icon:
+    type: string
+    format: uri
+    description: URL of the team's icon.
+    example: https://example.com/icons/engineering.png
+  description:
+    type: string
+    description: A detailed description of the team.
+    example: Responsible for developing and maintaining the company's products.
+example:
+  id: 1
+  name: Engineering Team
+  icon: https://example.com/icons/engineering.png
+  description: Responsible for developing and maintaining the company's products.

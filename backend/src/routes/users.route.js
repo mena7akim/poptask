@@ -2,12 +2,12 @@ const express = require("express");
 const router = express.Router();
 const { authenticateUser } = require("../middleware/auth.middleware");
 const {
-  createTeam,
-  getTeamsForUser,
-} = require("../controller/teams.controller");
+  createProfile,
+  updateProfile,
+} = require("../controller/users.controller");
 
 router.use(authenticateUser);
-router.post("/", createTeam);
-router.get("/", getTeamsForUser);
+router.post("/", createProfile);
+router.put("/", updateProfile);
 
 module.exports = router;

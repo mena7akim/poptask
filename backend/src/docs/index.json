@@ -1,0 +1,2552 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "poptask",
+    "description": "API documentation for the poptask application.",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://localhost:3000/api/v1"
+    }
+  ],
+  "paths": {
+    "/auth/request-login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request login",
+        "description": "Check if user is registered or not. If not, sends an email with OTP to register.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "example": {
+                  "email": "example@gmail.com"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request processed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "register",
+                                "login"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "login": {
+                    "value": {
+                      "status": "OK",
+                      "result": {
+                        "message": "User found, please login with your password.",
+                        "data": {
+                          "type": "login"
+                        }
+                      }
+                    }
+                  },
+                  "register": {
+                    "value": {
+                      "status": "OK",
+                      "result": {
+                        "message": "OTP has been sent to your email.",
+                        "data": {
+                          "type": "register"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login",
+        "description": "Login with email and password.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "example": {
+                  "email": "example@gmail.com",
+                  "password": "password"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Login successful."
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "type": "string",
+                              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjYwZjQwZjQwZjQwZjQwZjQwZjQwZjQiLCJlbWFpbCI6ImV4YW1wbGVAZ21haWwuY29tIiwiaWF0IjoxNjI5MzQwNjQ4LCJleHAiOjE2MjkzNDQyNDh9.7"
+                            },
+                            "user": {
+                              "$ref": "#/components/schemas/User"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Invalid email or password."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register",
+        "description": "Register with email and OTP, or login if user is already registered.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "otp"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "otp": {
+                    "type": "string"
+                  }
+                },
+                "example": {
+                  "email": "example@gmail.com",
+                  "otp": 123456
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful. in case that user is already registered.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "User logged in successfully."
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "type": "string",
+                              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjYwZjQwZjQwZjQwZjQwZjQwZjQwZjQiLCJlbWFpbCI6ImV4YW1wbGVAZ21haWwuY29tIiwiaWF0IjoxNjI5MzQwNjQ4LCJleHAiOjE2MjkzNDQyNDh9.7"
+                            },
+                            "user": {
+                              "$ref": "#/components/schemas/User"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Registration successful.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "User created successfully."
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "type": "string",
+                              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjYwZjQwZjQwZjQwZjQwZjQwZjQwZjQiLCJlbWFpbCI6ImV4YW1wbGVAZ21haWwuY29tIiwiaWF0IjoxNjI5MzQwNjQ4LCJleHAiOjE2MjkzNDQyNDh9.7"
+                            },
+                            "user": {
+                              "$ref": "#/components/schemas/User"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "This otp is invalid or expired."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/password-reset": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Reset password",
+        "description": "Reset the user's password using the OTP sent to their email.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "otp",
+                  "newPassword"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "The email address of the user resetting their password.",
+                    "example": "example@gmail.com"
+                  },
+                  "otp": {
+                    "type": "string",
+                    "description": "The OTP sent to the user's email for password reset.",
+                    "example": "123456"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "description": "The new password for the user.",
+                    "example": "newPassword123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Password has been reset successfully."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. Either the user is not found, or the OTP is invalid/expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "This otp is invalid or expired."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/request-password-reset": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request password reset",
+        "description": "Request a password reset by sending an OTP to the user's email. The user must already have a password set.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "The email address of the user requesting a password reset.",
+                    "example": "example@gmail.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "OTP has been sent to your email."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. The user is not registered or does not have a password set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Please register or create profile first."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create user profile",
+        "description": "Create a profile for the authenticated user. Requires a valid JWT token in the Authorization header.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "firstName",
+                  "lastName",
+                  "password"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "description": "The first name of the user.",
+                    "example": "John"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "The last name of the user.",
+                    "example": "Doe"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "The password for the user.",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Profile created successfully."
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/User"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. The profile already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Profile already exists."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Please login so you can access this!"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user profile",
+        "description": "Update the profile of the authenticated user. Requires a valid JWT token in the Authorization header.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "description": "The updated first name of the user.",
+                    "example": "John"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "The updated last name of the user.",
+                    "example": "Doe"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Profile updated successfully."
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/User"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. The profile does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Profile does not exist."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Please login so you can access this!"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teams": {
+      "post": {
+        "tags": [
+          "Teams"
+        ],
+        "summary": "Create a new team",
+        "description": "Create a new team and associate the authenticated user as an admin member. Requires a valid JWT token in the Authorization header.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "icon",
+                  "description"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the team.",
+                    "example": "Engineering Team"
+                  },
+                  "icon": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL of the team's icon.",
+                    "example": "https://example.com/icons/engineering.png"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "A detailed description of the team.",
+                    "example": "Responsible for developing and maintaining the company's products."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Team created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Team have been created successfully."
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/Team"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. Missing required fields or invalid data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Missing required fields."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Please login so you can access this!"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Teams"
+        ],
+        "summary": "Get teams for the authenticated user",
+        "description": "Fetch all teams associated with the authenticated user. Requires a valid JWT token in the Authorization header.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Teams fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Team"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Please login so you can access this!"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invitations": {
+      "get": {
+        "tags": [
+          "Invitations"
+        ],
+        "summary": "Get all invitations for the authenticated user",
+        "description": "Fetch all active invitations for the authenticated user. Requires a valid JWT token in the Authorization header.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitations fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Here are your invitations."
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Invitation"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Please login so you can access this!"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invitations/{teamId}": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "summary": "Send an invitation to join a team",
+        "description": "Send an invitation to a user to join a team. Requires a valid JWT token in the Authorization header.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the team."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "teamId",
+                  "email"
+                ],
+                "properties": {
+                  "teamId": {
+                    "type": "integer",
+                    "description": "The ID of the team to which the user is being invited.",
+                    "example": 1
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "The email address of the user being invited.",
+                    "example": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invitation sent successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "User has been invited successfully."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. The user is already a member of the team or has already been invited.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "This user is already on the team."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Please login so you can access this!"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found. The user does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "This user does not exist."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invitations/{invitationId}/accept": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "summary": "Accept an invitation to join a team",
+        "description": "Accept an invitation to join a team. Requires a valid JWT token in the Authorization header.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invitationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the invitation to accept."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation accepted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "You have joined the team successfully."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. The invitation is expired or does not exist, or the user cannot accept the invitation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "You can't accept or reject this invitation."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Please login so you can access this!"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found. The invitation is expired or does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Invitation is expired or not exist."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invitations/{invitationId}/reject": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "summary": "Reject an invitation to join a team",
+        "description": "Reject an invitation to join a team. Requires a valid JWT token in the Authorization header.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invitationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the invitation to reject."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation rejected successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "You have rejected the invitation successfully."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. The user cannot reject the invitation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "You can't accept or reject this invitation."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Please login so you can access this!"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found. The invitation is expired or does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Invitation is expired or not exist."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{teamId}": {
+      "post": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Create a new project",
+        "description": "Create a new project for the specified team. Requires admin role.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the team to which the project belongs."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "description",
+                  "deadline"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the project.",
+                    "example": "Design Homepage"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "A description of the project.",
+                    "example": "Create a responsive design for the homepage."
+                  },
+                  "deadline": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The deadline for the project.",
+                    "example": "2023-12-31T23:59:59Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Project created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Project has been created successfully."
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/Project"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. A project with the same name already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Project with this name already exists."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not authorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "You are not authorized to perform this action."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Get all projects for a team",
+        "description": "Fetch all projects for the specified team with pagination. Requires admin or tasker role.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the team to which the projects belong."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The page number for pagination (default is 1).",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The number of items per page (default is 10).",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Projects fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Your projects have been retrieved successfully."
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Project"
+                          }
+                        },
+                        "meta": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "example": 20
+                            },
+                            "page": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "limit": {
+                              "type": "integer",
+                              "example": 10
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not authorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "You are not authorized to perform this action."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{teamId}/{projectId}": {
+      "put": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Update a project",
+        "description": "Update an existing project. Requires admin role.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the team to which the project belongs."
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the project to update."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The updated name of the project.",
+                    "example": "Redesign Homepage"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "The updated description of the project.",
+                    "example": "Redesign the homepage with new branding guidelines."
+                  },
+                  "deadline": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The updated deadline for the project.",
+                    "example": "2024-01-31T23:59:59Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Project has been updated successfully."
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/Project"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request. A project with the same name already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Project with this name already exists."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not authorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "You are not authorized to perform this action."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found. The project does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Project not found."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Get a project",
+        "description": "Fetch a project by ID. Requires admin or tasker role.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the team to which the project belongs."
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the project to fetch."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Project has been retrieved successfully."
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/Project"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not authorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "You are not authorized to perform this action."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found. The project does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Project not found."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Delete a project",
+        "description": "Soft delete a project. Requires admin role.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the team to which the project belongs."
+          },
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the project to delete."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Project has been deleted successfully."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. No valid JWT token provided or user not authorized.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "You are not authorized to perform this action."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found. The project does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "FAILED"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Project not found."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "profileImage": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": 1,
+          "email": "example@email.com",
+          "firstName": "John",
+          "lastName": "Doe",
+          "profileImage": "https://example.com/image.jpg"
+        }
+      },
+      "Project": {
+        "type": "object",
+        "required": [
+          "teamId",
+          "name",
+          "description",
+          "deadline"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier for the task.",
+            "example": 1
+          },
+          "teamId": {
+            "type": "integer",
+            "description": "The ID of the team this task belongs to.",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the project.",
+            "example": "Assignment 1"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the project.",
+            "example": "AI Linear Regression Assignment."
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The deadline for the project. Must be a valid date in the future.",
+            "example": "2013-09-29T18:46:19Z"
+          }
+        },
+        "example": {
+          "id": 1,
+          "teamId": 2,
+          "name": "Design Homepage",
+          "description": "Create a responsive design for the homepage with the new branding guidelines.",
+          "deadline": "2013-09-29T18:46:19Z"
+        }
+      },
+      "Task": {
+        "type": "object",
+        "description": "A task associated with a project, including its status and priority.",
+        "required": [
+          "projectId",
+          "name",
+          "content",
+          "statusId",
+          "priority",
+          "dependancies"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The unique identifier for the task.",
+            "example": 1
+          },
+          "projectId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The ID of the project this task belongs to.",
+            "example": 10
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "The name of the task.",
+            "example": "Implement Authentication"
+          },
+          "description": {
+            "type": "string",
+            "description": "A detailed description of the task.",
+            "example": "Develop the authentication module using JWT and OAuth2."
+          },
+          "content": {
+            "type": "string",
+            "description": "the content of the task.",
+            "example": "Ensure compliance with security standards."
+          },
+          "statusId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "References the TaskStatus model's ID indicating the current status of the task.",
+            "example": 3
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "Low",
+              "Medium",
+              "High"
+            ],
+            "description": "The priority level of the task.",
+            "default": "Medium",
+            "example": "High"
+          },
+          "dependancies": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "array with ids of the tasks that this task depends on",
+            "example": [
+              1,
+              3,
+              5
+            ]
+          }
+        },
+        "example": {
+          "id": 1,
+          "projectId": 10,
+          "name": "Implement Authentication",
+          "description": "Develop the authentication module using JWT and OAuth2.",
+          "content": "Ensure compliance with security standards.",
+          "statusId": 3,
+          "priority": "High",
+          "dependancies": [
+            1,
+            3,
+            5
+          ]
+        }
+      },
+      "Team": {
+        "type": "object",
+        "description": "A team within the organization.",
+        "required": [
+          "name",
+          "icon",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The unique identifier for the team.",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "The name of the team. Must be unique.",
+            "example": "Engineering Team"
+          },
+          "icon": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the team's icon.",
+            "example": "https://example.com/icons/engineering.png"
+          },
+          "description": {
+            "type": "string",
+            "description": "A detailed description of the team.",
+            "example": "Responsible for developing and maintaining the company's products."
+          }
+        },
+        "example": {
+          "id": 1,
+          "name": "Engineering Team",
+          "icon": "https://example.com/icons/engineering.png",
+          "description": "Responsible for developing and maintaining the company's products."
+        }
+      },
+      "TeamMember": {
+        "type": "object",
+        "description": "Represents the association between a User and a Team, including the permissions level of the user within the team.",
+        "required": [
+          "userId",
+          "teamId",
+          "permissions"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The unique identifier for the team member association.",
+            "example": 1
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The ID of the user associated with the team.",
+            "example": 25
+          },
+          "teamId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The ID of the team associated with the user.",
+            "example": 10
+          },
+          "permissions": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "description": "The permission level of the user within the team.",
+            "default": "viewer",
+            "example": "editor"
+          }
+        },
+        "example": {
+          "id": 1,
+          "userId": 25,
+          "teamId": 10,
+          "permissions": "editor"
+        }
+      },
+      "Invitation": {
+        "type": "object",
+        "description": "Represents an invitation sent to a user to join a team.",
+        "required": [
+          "teamId",
+          "inviteeEmail",
+          "expiresAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The unique identifier for the invitation.",
+            "example": 1
+          },
+          "teamId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The ID of the team to which the user is being invited.",
+            "example": 10
+          },
+          "inviteeEmail": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "description": "The email address of the user being invited.",
+            "example": "user@example.com"
+          }
+        },
+        "example": {
+          "id": 1,
+          "teamId": 10,
+          "inviteeEmail": "user@example.com"
+        }
+      },
+      "InternalServerError": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "FAILED"
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Internal Server Error"
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}

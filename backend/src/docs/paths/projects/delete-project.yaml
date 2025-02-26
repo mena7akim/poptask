@@ -1,0 +1,74 @@
+tags:
+  - Projects
+summary: "Delete a project"
+description: "Soft delete a project. Requires admin role."
+security:
+  - BearerAuth: []
+parameters:
+  - name: teamId
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: The ID of the team to which the project belongs.
+  - name: projectId
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: The ID of the project to delete.
+responses:
+  "200":
+    description: "Project deleted successfully."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Project has been deleted successfully."
+  "401":
+    description: "Unauthorized. No valid JWT token provided or user not authorized."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "You are not authorized to perform this action."
+  "404":
+    description: "Not found. The project does not exist."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Project not found."
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

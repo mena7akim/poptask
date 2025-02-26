@@ -1,0 +1,36 @@
+type: object
+description: Represents the association between a User and a Team, including the permissions level of the user within the team.
+required:
+  - userId
+  - teamId
+  - permissions
+properties:
+  id:
+    type: integer
+    format: int32
+    description: The unique identifier for the team member association.
+    example: 1
+  userId:
+    type: integer
+    format: int32
+    description: The ID of the user associated with the team.
+    example: 25
+  teamId:
+    type: integer
+    format: int32
+    description: The ID of the team associated with the user.
+    example: 10
+  permissions:
+    type: string
+    enum:
+      - admin
+      - editor
+      - viewer
+    description: The permission level of the user within the team.
+    default: viewer
+    example: editor
+example:
+  id: 1
+  userId: 25
+  teamId: 10
+  permissions: editor

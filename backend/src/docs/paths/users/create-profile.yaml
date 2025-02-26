@@ -1,0 +1,85 @@
+tags:
+  - Users
+summary: "Create user profile"
+description: "Create a profile for the authenticated user. Requires a valid JWT token in the Authorization header."
+security:
+  - BearerAuth: []
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - firstName
+          - lastName
+          - password
+        properties:
+          firstName:
+            type: string
+            description: The first name of the user.
+            example: "John"
+          lastName:
+            type: string
+            description: The last name of the user.
+            example: "Doe"
+          password:
+            type: string
+            description: The password for the user.
+            example: "password123"
+responses:
+  "200":
+    description: "Profile created successfully."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Profile created successfully."
+                data:
+                  $ref: "../../components/User.yaml"
+  "400":
+    description: "Bad request. The profile already exists."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Profile already exists."
+  "401":
+    description: "Unauthorized. No valid JWT token provided or user not found."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Please login so you can access this!"
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

@@ -1,0 +1,68 @@
+type: object
+description: A task associated with a project, including its status and priority.
+required:
+  - projectId
+  - name
+  - content
+  - statusId
+  - priority
+  - dependancies
+properties:
+  id:
+    type: integer
+    format: int32
+    description: The unique identifier for the task.
+    example: 1
+  projectId:
+    type: integer
+    format: int32
+    description: The ID of the project this task belongs to.
+    example: 10
+  name:
+    type: string
+    maxLength: 255
+    description: The name of the task.
+    example: Implement Authentication
+  description:
+    type: string
+    description: A detailed description of the task.
+    example: Develop the authentication module using JWT and OAuth2.
+  content:
+    type: string
+    description: the content of the task.
+    example: Ensure compliance with security standards.
+  statusId:
+    type: integer
+    format: int32
+    description: References the TaskStatus model's ID indicating the current status of the task.
+    example: 3
+  priority:
+    type: string
+    enum:
+      - Low
+      - Medium
+      - High
+    description: The priority level of the task.
+    default: Medium
+    example: High
+  dependancies:
+    type: array
+    items:
+      type: number
+    description: array with ids of the tasks that this task depends on
+    example:
+      - 1
+      - 3
+      - 5
+example:
+  id: 1
+  projectId: 10
+  name: Implement Authentication
+  description: Develop the authentication module using JWT and OAuth2.
+  content: Ensure compliance with security standards.
+  statusId: 3
+  priority: High
+  dependancies:
+    - 1
+    - 3
+    - 5

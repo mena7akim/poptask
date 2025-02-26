@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "start": "swagger-cli bundle src/docs/index.yaml --outfile src/docs/index.json && nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,11 +17,17 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.9",
+    "otp-generator": "^4.0.1",
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.5"
+    "redis": "^4.7.0",
+    "sequelize": "^6.37.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.7.0"
   },
   "devDependencies": {
     "sequelize-cli": "^6.6.2"

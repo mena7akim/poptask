@@ -1,0 +1,60 @@
+tags:
+  - Auth
+summary: "Request login"
+description: "Check if user is registered or not. If not, sends an email with OTP to register."
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - email
+        properties:
+          email:
+            type: string
+        example:
+          email: example@gmail.com
+responses:
+  "200":
+    description: "Request processed successfully."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - register
+                        - login
+        examples:
+          login:
+            value:
+              status: "OK"
+              result:
+                message: "User found, please login with your password."
+                data:
+                  type: "login"
+          register:
+            value:
+              status: "OK"
+              result:
+                message: "OTP has been sent to your email."
+                data:
+                  type: "register"
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

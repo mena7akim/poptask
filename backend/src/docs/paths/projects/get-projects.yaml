@@ -1,0 +1,80 @@
+tags:
+  - Projects
+summary: "Get all projects for a team"
+description: "Fetch all projects for the specified team with pagination. Requires admin or tasker role."
+security:
+  - BearerAuth: []
+parameters:
+  - name: teamId
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: The ID of the team to which the projects belong.
+  - name: page
+    in: query
+    schema:
+      type: integer
+    description: The page number for pagination (default is 1).
+    example: 1
+  - name: limit
+    in: query
+    schema:
+      type: integer
+    description: The number of items per page (default is 10).
+    example: 10
+responses:
+  "200":
+    description: "Projects fetched successfully."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Your projects have been retrieved successfully."
+                data:
+                  type: array
+                  items:
+                    $ref: "../../components/Project.yaml"
+                meta:
+                  type: object
+                  properties:
+                    total:
+                      type: integer
+                      example: 20
+                    page:
+                      type: integer
+                      example: 1
+                    limit:
+                      type: integer
+                      example: 10
+  "401":
+    description: "Unauthorized. No valid JWT token provided or user not authorized."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "You are not authorized to perform this action."
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

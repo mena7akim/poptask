@@ -1,0 +1,46 @@
+tags:
+  - Teams
+summary: "Get teams for the authenticated user"
+description: "Fetch all teams associated with the authenticated user. Requires a valid JWT token in the Authorization header."
+security:
+  - BearerAuth: []
+responses:
+  "200":
+    description: "Teams fetched successfully."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: "../../components/Team.yaml"
+  "401":
+    description: "Unauthorized. No valid JWT token provided or user not found."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Please login so you can access this!"
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

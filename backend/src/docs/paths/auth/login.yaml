@@ -1,0 +1,67 @@
+tags:
+  - Auth
+summary: "Login"
+description: "Login with email and password."
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - email
+          - password
+        properties:
+          email:
+            type: string
+          password:
+            type: string
+        example:
+          email: example@gmail.com
+          password: password
+responses:
+  "200":
+    description: "Login successful."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Login successful."
+                data:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MjYwZjQwZjQwZjQwZjQwZjQwZjQwZjQiLCJlbWFpbCI6ImV4YW1wbGVAZ21haWwuY29tIiwiaWF0IjoxNjI5MzQwNjQ4LCJleHAiOjE2MjkzNDQyNDh9.7"
+                    user:
+                      $ref: "../../components/User.yaml"
+  "400":
+    description: "Bad request."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Invalid email or password."
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

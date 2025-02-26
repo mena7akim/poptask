@@ -1,0 +1,93 @@
+tags:
+  - Projects
+summary: "Create a new project"
+description: "Create a new project for the specified team. Requires admin role."
+security:
+  - BearerAuth: []
+parameters:
+  - name: teamId
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: The ID of the team to which the project belongs.
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - name
+          - description
+          - deadline
+        properties:
+          name:
+            type: string
+            description: The name of the project.
+            example: "Design Homepage"
+          description:
+            type: string
+            description: A description of the project.
+            example: "Create a responsive design for the homepage."
+          deadline:
+            type: string
+            format: date-time
+            description: The deadline for the project.
+            example: "2023-12-31T23:59:59Z"
+responses:
+  "201":
+    description: "Project created successfully."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "OK"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Project has been created successfully."
+                data:
+                  $ref: "../../components/Project.yaml"
+  "400":
+    description: "Bad request. A project with the same name already exists."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Project with this name already exists."
+  "401":
+    description: "Unauthorized. No valid JWT token provided or user not authorized."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "FAILED"
+            result:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "You are not authorized to perform this action."
+  "500":
+    description: "Internal server error."
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/InternalServerError.yaml"

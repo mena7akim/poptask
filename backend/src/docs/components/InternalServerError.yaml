@@ -1,0 +1,11 @@
+type: object
+properties:
+  status:
+    type: string
+    example: FAILED
+  result:
+    type: object
+    properties:
+      message:
+        type: string
+        example: Internal Server Error
