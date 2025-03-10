@@ -1,5 +1,5 @@
 const { User, Invitation, TeamMember, Team } = require("../models");
-const sendEmail = require("../utils/email/sendEmail");
+const emailEmitter = require("../utils/eventBus/emailEmitter");
 const { asyncHandler } = require("../utils/error/errorHandling");
 const { successResponse } = require("../utils/response/successResponse");
 const { Op } = require("sequelize");
@@ -42,7 +42,8 @@ const sendInvitation = asyncHandler(async (req, res, next) => {
 
   const team = await Team.findOne({ where: { id: teamId } });
 
-  await sendEmail(
+  emailEmitter.emit(
+    "sendEmail",
     email,
     `${team.name} invites you to join their team`,
     invitationTemplate

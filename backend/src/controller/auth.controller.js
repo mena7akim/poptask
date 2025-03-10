@@ -1,7 +1,6 @@
 const { asyncHandler } = require("../utils/error/errorHandling");
 const bcrypt = require("bcrypt");
 const { User } = require("../models");
-const sendEmail = require("../utils/email/sendEmail");
 const { generateJWT } = require("../utils/security/generateToken");
 const { successResponse } = require("../utils/response/successResponse");
 const dotenv = require("dotenv");
@@ -10,6 +9,7 @@ dotenv.config();
 const otpGenerator = require("otp-generator");
 const redisClient = require("../db/redis/redisClient");
 const { otpEmailTemplate } = require("../utils/email/template");
+const emailEmitter = require("../utils/eventBus/emailEmitter");
 
 const requestLogin = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
@@ -26,8 +26,8 @@ const requestLogin = asyncHandler(async (req, res, next) => {
 
     // Send OTP to email
     const message = otpEmailTemplate(otp);
-    await sendEmail(email, "Your OTP", message);
-
+    emailEmitter.emit("sendEmail", email, "Your OTP", message);
+    console.log(emailEmitter.listeners("sendEmail"));
     return successResponse(res, {
       message: "OTP has been sent to your email.",
       data: {
@@ -130,7 +130,8 @@ const requestPasswordReset = asyncHandler(async (req, res, next) => {
 
   // Send OTP to email
   const message = otpEmailTemplate(otp);
-  await sendEmail(email, "Your OTP", message);
+
+  emailEmitter.emit("sendEmail", email, "Your OTP", message);
 
   return successResponse(res, {
     message: "OTP has been sent to your email.",

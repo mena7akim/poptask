@@ -1,9 +1,11 @@
-const nodemailer = require("nodemailer");
+const { createTransport } = require("nodemailer");
 const dotenv = require("dotenv");
+const emailEmitter = require("../eventBus/emailEmitter.js");
 dotenv.config();
 
 const sendEmail = async (to, subject, html) => {
-  const transporter = nodemailer.createTransport({
+  console.log("sending email to ", to);
+  const transporter = createTransport({
     service: "gmail",
     host: "stmp.gmail.com",
     port: 587,
