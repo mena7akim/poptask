@@ -27,7 +27,6 @@ const requestLogin = asyncHandler(async (req, res, next) => {
     // Send OTP to email
     const message = otpEmailTemplate(otp);
     emailEmitter.emit("sendEmail", email, "Your OTP", message);
-    console.log(emailEmitter.listeners("sendEmail"));
     return successResponse(res, {
       message: "OTP has been sent to your email.",
       data: {
