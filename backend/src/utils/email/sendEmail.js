@@ -15,15 +15,17 @@ const sendEmail = async (to, subject, html) => {
   });
 
   const mailOptions = {
-    from: `Taskaty ${process.env.SMTP_USER}`,
+    from: `Poptask <${process.env.SMTP_USER}>`,
     to,
     subject,
     html,
   };
 
+  console.log(mailOptions);
+
   await transporter.sendMail(mailOptions);
 
-  console.info(`Email Sent with subject: ${subject} to ${email}`);
+  console.info(`Email Sent with subject: ${subject} to ${to}`);
 };
 
 module.exports = sendEmail;

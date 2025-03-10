@@ -1,0 +1,28 @@
+name: "poptask"
+services:
+  db:
+    image: "postgres:13"
+    container_name: poptask-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=poptask
+  redis:
+    image: "redis:6"
+    container_name: poptask-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save 20 1 --loglevel warning --requirepass redis-password
+  poptask:
+    build:
+      context: .
+    container_name: poptask-api
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - redis

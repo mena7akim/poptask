@@ -19,9 +19,9 @@ const bootstrap = async (app, express) => {
 
   await redisClient.connect();
 
-  // syncTables();
+  await syncTables();
 
-  // seedTaskStatus();
+  await seedTaskStatus();
 
   app.use(morgan("dev"));
 

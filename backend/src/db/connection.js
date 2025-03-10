@@ -18,7 +18,8 @@ const connectDB = async () => {
 
 const syncTables = async () => {
   try {
-    await sequelize.sync({ force: false });
+    await sequelize.sync();
+    console.log("All models were synchronized successfully.");
   } catch (error) {
     console.error("Error while syncing tables: ", error);
   }
