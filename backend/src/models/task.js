@@ -32,18 +32,9 @@ const Task = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    statusId: {
-      type: DataTypes.INTEGER,
+    status: {
+      type: DataTypes.ENUM("pending", "in-progress", "completed"),
       allowNull: false,
-      references: {
-        model: TaskStatus,
-        key: "id",
-      },
-    },
-    priority: {
-      type: DataTypes.ENUM("Low", "Medium", "High"),
-      allowNull: false,
-      defaultValue: "Medium",
     },
     deletedAt: {
       type: DataTypes.DATE,
@@ -60,8 +51,8 @@ const Task = sequelize.define(
         fields: ["projectId"],
       },
       {
-        name: "idx_statusId",
-        fields: ["statusId"],
+        name: "idx_status",
+        fields: ["status"],
       },
     ],
   }
@@ -69,8 +60,5 @@ const Task = sequelize.define(
 
 Project.hasMany(Task, { foreignKey: "projectId", onDelete: "CASCADE" });
 Task.belongsTo(Project, { foreignKey: "projectId" });
-
-TaskStatus.hasMany(Task, { foreignKey: "statusId" });
-Task.belongsTo(TaskStatus, { foreignKey: "statusId" });
 
 module.exports = Task;

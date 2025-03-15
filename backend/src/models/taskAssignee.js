@@ -38,6 +38,7 @@ const TaskAssignee = sequelize.define(
   },
   {
     tableName: "TaskAssignees",
+    paranoid: true,
     timestamps: false,
     indexes: [
       {

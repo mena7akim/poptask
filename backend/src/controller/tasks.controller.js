@@ -1,368 +1,250 @@
 const { asyncHandler } = require("../utils/error/errorHandling");
-const { Task, TaskAssignee, TaskStatus, TaskDependency } = require("../models");
+const { Task, TaskAssignee, TaskDependency } = require("../models");
 const { sequelize } = require("../db/connection");
 const { successResponse } = require("../utils/response/successResponse");
 const { Op } = require("sequelize");
 
 const createTask = asyncHandler(async (req, res, next) => {
+  const projectId = req.params.projectId;
   const { task, dependencies } = req.body;
-  task.projectId = req.params.projectId;
+  task.projectId = projectId;
 
-  const pendingStatus = await TaskStatus.findOne({
-    where: { statusName: "Pending" },
-  });
-  if (!pendingStatus) return next(new Error("Pending status not found"));
-
-  task.statusId = pendingStatus.id;
-  const transaction = await sequelize.transaction();
-
-  try {
+  await sequelize.transaction(async (t) => {
     const createdTask = await Task.create(task, { transaction });
 
-    if (dependencies?.length) {
-      // Verify all dependencies exist in the same project
-      const validDependencies = await Task.findAll({
-        where: {
-          id: dependencies,
-          projectId: task.projectId,
-        },
-        transaction,
-      });
+    if (dependencies && dependencies.length > 0) {
+      const taskDependencies = dependencies.map((dependency) => ({
+        from: dependency,
+        to: createdTask.id,
+      }));
 
-      if (validDependencies.length !== dependencies.length) {
-        throw new Error(
-          "One or more dependencies are invalid or belong to different project"
-        );
-      }
-
-      // Create dependency records
-      await TaskDependency.bulkCreate(
-        dependencies.map((depId) => ({
-          dependentTaskId: createdTask.id,
-          dependencyTaskId: depId,
-        })),
-        { transaction }
-      );
+      await TaskDependency.bulkCreate(taskDependencies, { transaction });
     }
 
     await transaction.commit();
-    return successResponse(res, {
-      message: "Task created successfully",
-      data: createdTask,
-    });
-  } catch (error) {
-    await transaction.rollback();
-    return next(error);
-  }
+  });
+
+  return successResponse(res, {
+    message: "Task created successfully",
+    data: createdTask,
+  });
 });
 
 const updateTask = asyncHandler(async (req, res, next) => {
-  const { taskId } = req.params;
-  const { task: taskData, dependencies } = req.body;
+  const projectId = req.params.projectId;
+  const { task, dependencies } = req.body;
 
-  const transaction = await sequelize.transaction();
+  const taskId = req.params.taskId;
+  const existingTask = await Task.findOne({ where: { id: taskId, projectId } });
 
-  try {
-    const existingTask = await Task.findByPk(taskId, {
-      include: [TaskStatus],
-      transaction,
-    });
+  if (!existingTask) {
+    return next(new Error("Task not found in this project", { cause: 404 }));
+  }
 
-    if (!existingTask) throw new Error("Task not found");
+  let tasksGraph = await getTasksAsGraph(projectId);
 
-    // Only process dependencies if task is Pending
-    if (existingTask.TaskStatus.statusName === "Pending" && dependencies) {
-      // Get current dependencies upfront
-      const currentDependencies = await existingTask.getDependencies({
-        transaction,
-        attributes: ["id"],
-      });
-      const currentDepIds = currentDependencies.map((d) => d.id);
-
-      // Calculate changes early for validation
-      const dependenciesToAdd = dependencies.filter(
-        (id) => !currentDepIds.includes(id)
-      );
-      const dependenciesToRemove = currentDepIds.filter(
-        (id) => !dependencies.includes(id)
-      );
-
-      // Validate new dependencies first - same project check
-      if (dependenciesToAdd.length > 0) {
-        const validDeps = await Task.findAll({
-          where: {
-            id: dependenciesToAdd,
-            projectId: existingTask.projectId,
-          },
-          transaction,
-        });
-
-        if (validDeps.length !== dependenciesToAdd.length) {
-          throw new Error("Invalid dependencies or cross-project dependencies");
-        }
+  await sequelize.transaction(async (t) => {
+    for (const node of tasksGraph) {
+      // removing the node from its previous dependencies
+      if (dependencies.includes(node) && !tasksGraph[node].includes(taskId)) {
+        tasksGraph[node].push(taskId);
       }
-
-      // Circular check only for new dependencies being added
-      for (const depId of dependenciesToAdd) {
-        if (await hasCircularDependency(taskId, depId, transaction)) {
-          throw new Error(
-            `Circular dependency detected between task ${taskId} and ${depId}`
-          );
-        }
+      // adding the node to its new dependencies
+      else if (
+        !dependencies.includes(node) &&
+        tasksGraph[node].includes(taskId)
+      ) {
+        tasksGraph[node] = tasksGraph[node].filter((node) => node != taskId);
       }
-
-      // Perform actual dependency updates
-      await TaskDependency.destroy({
-        where: {
-          dependentTaskId: taskId,
-          dependencyTaskId: dependenciesToRemove,
-        },
-        transaction,
+    }
+    if (!isDAG(tasksGraph)) {
+      throw new Error("The updated dependencies create a cycle", {
+        cause: 400,
       });
-
-      await TaskDependency.bulkCreate(
-        dependenciesToAdd.map((depId) => ({
-          dependentTaskId: taskId,
-          dependencyTaskId: depId,
-        })),
-        { transaction }
-      );
     }
 
-    await existingTask.update(taskData, { transaction });
-    await transaction.commit();
+    await Task.update(task, { where: { id: taskId }, transaction: t });
 
-    const updatedTask = await Task.findByPk(taskId, {
-      include: [{ model: Task, as: "Dependencies" }, TaskStatus],
-    });
+    await TaskDependency.destroy({ where: { to: taskId }, transaction: t });
 
-    return successResponse(res, {
-      message: "Task updated successfully",
-      data: updatedTask,
-    });
-  } catch (error) {
-    await transaction.rollback();
-    return next(error);
-  }
+    if (dependencies && dependencies.length > 0) {
+      const taskDependencies = dependencies.map((dependency) => ({
+        from: dependency,
+        to: taskId,
+      }));
+
+      await TaskDependency.bulkCreate(taskDependencies, { transaction: t });
+    }
+
+    await t.commit();
+  });
+
+  return successResponse(res, {
+    message: "Task updated successfully",
+    data: { taskId },
+  });
 });
 
 const popTask = asyncHandler(async (req, res, next) => {
-  const user = req.user;
-  const projectId = req.params.projectId;
+  const { projectId } = req.params;
+  const { userId } = req.user;
 
-  const isUserAssigned = await TaskAssignee.findAll({
+  const task = await TaskAssignee.findOne({
     where: {
-      userId: user.id,
+      userId,
+    },
+    include: [
+      {
+        model: Task,
+        where: {
+          projectId,
+        },
+      },
+    ],
+  });
+
+  if (task) {
+    return successResponse(res, {
+      message: "Task found successfully",
+      data: task,
+    });
+  }
+
+  const tasksGraph = await getTasksAsGraph(projectId);
+
+  const pickedTask = await getPendingTask(projectId, userId, tasksGraph);
+
+  if (!pickedTask) {
+    return successResponse(res, {
+      message: "No task found",
+      data: {},
+    });
+  }
+
+  await sequelize.transaction(async (t) => {
+    await TaskAssignee.create(
+      {
+        userId,
+        taskId: pickedTask,
+      },
+      { transaction: t }
+    );
+
+    await Task.update(
+      {
+        status: "in-progress",
+      },
+      {
+        where: {
+          id: pickedTask,
+        },
+        transaction: t,
+      }
+    );
+  });
+
+  const pickedTaskDetails = await Task.findOne({
+    where: {
+      id: pickedTask,
     },
   });
 
-  if (isUserAssigned) {
-    return next(new Error("User is already assigned to task."));
-  }
-
-  const transaction = await sequelize.transaction();
-
-  try {
-    // Get required statuses
-    const [pendingStatus, inProgressStatus, completedStatus] =
-      await Promise.all([
-        TaskStatus.findOne({ where: { statusName: "Pending" }, transaction }),
-        TaskStatus.findOne({
-          where: { statusName: "In Progress" },
-          transaction,
-        }),
-        TaskStatus.findOne({ where: { statusName: "Completed" }, transaction }),
-      ]);
-
-    // Find eligible task with row locking
-    const task = await Task.findOne({
-      where: {
-        projectId,
-        statusId: pendingStatus.id,
-        // Check all dependencies are completed using subquery
-        [Op.and]: sequelize.literal(`(
-          SELECT COUNT(*) FROM "TaskDependencies" AS Dependency
-          JOIN "Tasks" AS DepTask ON Dependency."dependencyTaskId" = DepTask.id
-          WHERE Dependency."dependentTaskId" = "Task".id
-          AND DepTask."statusId" != ${completedStatus.id}
-        ) = 0`),
-      },
-      transaction,
-      lock: true,
-      skipLocked: true,
-    });
-
-    if (!task) {
-      await transaction.commit();
-      return successResponse(res, {
-        message: "No available tasks to pop",
-        data: null,
-      });
-    }
-
-    // Assign to current user
-    await TaskAssignee.create(
-      {
-        taskId: task.id,
-        userId: user.id,
-      },
-      { transaction }
-    );
-
-    // Update status to In Progress
-    await task.update({ statusId: inProgressStatus.id }, { transaction });
-
-    await transaction.commit();
-    return successResponse(res, {
-      message: "Task popped successfully",
-      data: task,
-    });
-  } catch (error) {
-    await transaction.rollback();
-    return next(error);
-  }
+  return successResponse(res, {
+    message: "Task found successfully",
+    data: pickedTaskDetails,
+  });
 });
 
 const skipTask = asyncHandler(async (req, res, next) => {
-  const user = req.user;
-  const { taskId, projectId } = req.params;
-  const transaction = await sequelize.transaction();
+  const { projectId, taskId } = req.params;
+  const { userId } = req.user;
 
-  try {
-    // Verify task belongs to project
-    const task = await Task.findOne({
-      where: {
-        id: taskId,
-        projectId: projectId,
-      },
-      transaction,
-    });
-
-    if (!task) {
-      throw new Error("Task not found in this project");
-    }
-
-    // Check user assignment
-    const assignment = await TaskAssignee.findOne({
-      where: {
-        taskId: taskId,
-        userId: user.id,
-      },
-      transaction,
-    });
-
-    if (!assignment) {
-      throw new Error("User is not assigned to this task");
-    }
-
-    // Get pending status
-    const pendingStatus = await TaskStatus.findOne({
-      where: { statusName: "Pending" },
-      transaction,
-    });
-
-    if (!pendingStatus) {
-      throw new Error("Pending status not found");
-    }
-
-    // Remove assignment
-    await TaskAssignee.destroy({
-      where: {
-        taskId: taskId,
-        userId: user.id,
-      },
-      transaction,
-    });
-
-    // Reset task status
-    await task.update(
+  const task = await TaskAssignee.findOne({
+    where: {
+      userId,
+      taskId,
+    },
+    include: [
       {
-        statusId: pendingStatus.id,
+        model: Task,
+        where: {
+          projectId,
+        },
       },
-      { transaction }
+    ],
+  });
+
+  if (!task) {
+    return next(new Error("Task not found in this project", { cause: 404 }));
+  }
+
+  await sequelize.transaction(async (t) => {
+    await TaskAssignee.destroy({ where: { taskId }, transaction: t });
+
+    await Task.update(
+      {
+        status: "pending",
+      },
+      {
+        where: {
+          id: taskId,
+        },
+        transaction: t,
+      }
     );
 
-    // Commit transaction
-    await transaction.commit();
+    await t.commit();
+  });
 
-    return successResponse(res, {
-      message: "Task skipped successfully.",
-    });
-  } catch (error) {
-    await transaction.rollback();
-    return next(error);
-  }
+  return successResponse(res, {
+    message: "Task skipped successfully",
+  });
 });
 
 const completeTask = asyncHandler(async (req, res, next) => {
-  const user = req.user;
-  const { taskId, projectId } = req.params;
-  const transaction = await sequelize.transaction();
+  const { projectId, taskId } = req.params;
+  const { userId } = req.user;
 
-  try {
-    // Verify task belongs to project
-    const task = await Task.findOne({
-      where: {
-        id: taskId,
-        projectId: projectId,
-      },
-      transaction,
-    });
-
-    if (!task) {
-      throw new Error("Task not found in this project");
-    }
-
-    // Check user assignment
-    const assignment = await TaskAssignee.findOne({
-      where: {
-        taskId: taskId,
-        userId: user.id,
-      },
-      transaction,
-    });
-
-    if (!assignment) {
-      throw new Error("User is not assigned to this task");
-    }
-
-    // Get pending status
-    const completedStatus = await TaskStatus.findOne({
-      where: { statusName: "Completed" },
-      transaction,
-    });
-
-    if (!completedStatus) {
-      throw new Error("Completed status not found");
-    }
-
-    // Remove assignment
-    await TaskAssignee.destroy({
-      where: {
-        taskId: taskId,
-        userId: user.id,
-      },
-      transaction,
-    });
-
-    // Reset task status
-    await task.update(
+  const task = await TaskAssignee.findOne({
+    where: {
+      userId,
+      taskId,
+    },
+    include: [
       {
-        statusId: pendingStatus.id,
+        model: Task,
+        where: {
+          projectId,
+        },
       },
-      { transaction }
+    ],
+  });
+
+  if (!task) {
+    return next(new Error("Task not found in this project", { cause: 404 }));
+  }
+
+  await sequelize.transaction(async (t) => {
+    await TaskAssignee.destroy({ where: { taskId }, transaction: t });
+
+    await Task.update(
+      {
+        status: "completed",
+      },
+      {
+        where: {
+          id: taskId,
+        },
+        transaction: t,
+      }
     );
 
-    // Commit transaction
-    await transaction.commit();
+    await t.commit();
+  });
 
-    return successResponse(res, {
-      message: "Task marked as compeleted successfully.",
-    });
-  } catch (error) {
-    await transaction.rollback();
-    return next(error);
-  }
+  return successResponse(res, {
+    message: "Task completed successfully",
+  });
 });
 
 const deleteTask = asyncHandler(async (req, res, next) => {
@@ -394,28 +276,123 @@ const deleteTask = asyncHandler(async (req, res, next) => {
   });
 });
 
-// Circular dependency checker
-async function hasCircularDependency(taskId, dependencyId, transaction) {
+const getTasksAsGraph = async (projectId) => {
+  let tasks = await Task.findAll({
+    attributes: ["id", "status"],
+    where: {
+      projectId: projectId,
+    },
+  });
+  tasks = tasks.map((task) => {
+    return { id: task.id, status: task.status };
+  });
+  let edges = await TaskDependency.findAll({
+    attributes: ["from", "to"],
+    where: {
+      from: {
+        [Op.in]: tasks.map((task) => task.id),
+      },
+    },
+  });
+
+  let graph = {};
+
+  tasks.forEach((task) => {
+    graph[task.id] = { list: [], status: task.status };
+  });
+
+  edges.forEach((edge) => {
+    graph[edge.from].list.push(edge.to);
+  });
+
+  return graph;
+};
+
+const isDAG = (graph) => {
+  const color = Object.fromEntries(Object.keys(graph).map((node) => [node, 0]));
+
+  const dfs = (node) => {
+    color[node] = 1;
+    for (const neighbor of graph[node].list) {
+      if (color[neighbor] == 0) {
+        if (dfs(neighbor)) return true;
+      } else if (color[neighbor] == 1) {
+        return true;
+      }
+    }
+    color[node] = 2;
+    return false;
+  };
+
+  for (const node in graph) {
+    if (color[node] == 0 && dfs(node)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const getPendingTask = async (projectId, userId, tasksGraph) => {
+  const assignedTasksHistory = await TaskAssignee.findAll({
+    where: {
+      userId,
+    },
+    include: [
+      {
+        model: Task,
+        where: {
+          projectId,
+        },
+      },
+    ],
+    paranoid: true,
+  });
+
+  const assignedTasks = assignedTasksHistory.map((task) => task.taskId);
+  const reversedGraph = Object.fromEntries(
+    Object.keys(tasksGraph).map((node) => [
+      node,
+      { list: [], status: tasksGraph[node].status },
+    ])
+  );
+  for (const node in tasksGraph) {
+    for (const neighbor of tasksGraph[node].list) {
+      reversedGraph[neighbor].list.push(node);
+    }
+  }
   const visited = new Set();
-  const stack = [dependencyId];
+  let pickedTask = null;
+  const dfs = (node) => {
+    visited.push(node);
+    for (const neighbor of reversedGraph[node].list) {
+      if (visited.has(neighbor)) {
+        continue;
+      }
+      const isCandidate =
+        reversedGraph[neighbor].status === "pending" &&
+        !assignedTasks.includes(neighbor);
+      for (const neighborOfNeighbor of reversedGraph[neighbor].list) {
+        if (reversedGraph[neighborOfNeighbor].status !== "completed") {
+          isCandidate = false;
+          break;
+        }
+      }
+      if (isCandidate) {
+        pickedTask = neighbor;
+        return;
+      }
+      dfs(neighbor);
+    }
+  };
 
-  while (stack.length > 0) {
-    const currentId = stack.pop();
-
-    if (currentId === taskId) return true;
-    if (visited.has(currentId)) continue;
-    visited.add(currentId);
-
-    const deps = await TaskDependency.findAll({
-      where: { dependentTaskId: currentId },
-      transaction,
-    });
-
-    stack.push(...deps.map((d) => d.dependencyTaskId));
+  for (const node in reversedGraph) {
+    if (!visited.has(node) && !pickedTask) {
+      dfs(node);
+    }
   }
 
-  return false;
-}
+  return pickedTask;
+};
 
 module.exports = {
   createTask,

@@ -28,4 +28,8 @@ const unauthorizedError = (
   return new Error(message, { cause: 401 });
 };
 
-module.exports = { asyncHandler, globalErrorHandling, unauthorizedError };
+module.exports = {
+  asyncHandler,
+  globalErrorHandling,
+  unauthorizedError,
+};

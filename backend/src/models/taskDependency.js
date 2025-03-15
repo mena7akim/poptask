@@ -5,7 +5,7 @@ const Task = require("./task");
 const TaskDependency = sequelize.define(
   "TaskDependency",
   {
-    dependentTaskId: {
+    from: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       references: {
@@ -14,7 +14,7 @@ const TaskDependency = sequelize.define(
       },
       onDelete: "CASCADE",
     },
-    dependencyTaskId: {
+    to: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       references: {
@@ -31,18 +31,14 @@ const TaskDependency = sequelize.define(
 );
 
 // Self-referential Associations
-Task.belongsToMany(Task, {
-  through: TaskDependency,
-  as: "Dependencies",
-  foreignKey: "dependentTaskId",
-  otherKey: "dependencyTaskId",
+Task.hasMany(TaskDependency, {
+  foreignKey: "from",
+  as: "fromTask",
 });
 
-Task.belongsToMany(Task, {
-  through: TaskDependency,
-  as: "Dependents",
-  foreignKey: "dependencyTaskId",
-  otherKey: "dependentTaskId",
+Task.hasMany(TaskDependency, {
+  foreignKey: "to",
+  as: "toTask",
 });
 
 module.exports = TaskDependency;
