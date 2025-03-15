@@ -4,7 +4,7 @@ required:
   - projectId
   - name
   - content
-  - statusId
+  - status
   - priority
   - dependancies
 properties:
@@ -31,11 +31,15 @@ properties:
     type: string
     description: the content of the task.
     example: Ensure compliance with security standards.
-  statusId:
-    type: integer
-    format: int32
-    description: References the TaskStatus model's ID indicating the current status of the task.
-    example: 3
+  status:
+    type: string
+    enum:
+      - pending
+      - in-progress
+      - completed
+    description: The status of the task.
+    default: pending
+    example: completed
   priority:
     type: string
     enum:
@@ -45,7 +49,7 @@ properties:
     description: The priority level of the task.
     default: Medium
     example: High
-  dependancies:
+  dependencies:
     type: array
     items:
       type: number
@@ -62,7 +66,7 @@ example:
   content: Ensure compliance with security standards.
   statusId: 3
   priority: High
-  dependancies:
+  dependencies:
     - 1
     - 3
     - 5

@@ -1,7 +1,6 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../db/connection");
 const Project = require("./project");
-const TaskStatus = require("./taskStatus");
 
 const Task = sequelize.define(
   "Task",

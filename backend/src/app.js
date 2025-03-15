@@ -9,7 +9,6 @@ const projectsRouter = require("./routes/projects.route.js");
 const usersRouter = require("./routes/users.route.js");
 
 const { globalErrorHandling } = require("./utils/error/errorHandling.js");
-const seedTaskStatus = require("./db/seeders/taskStatusSeeder.js");
 const apiBasePath = "/api/v1";
 const redisClient = require("./db/redis/redisClient.js");
 const morgan = require("morgan");
@@ -20,8 +19,6 @@ const bootstrap = async (app, express) => {
   await redisClient.connect();
 
   await syncTables();
-
-  await seedTaskStatus();
 
   app.use(morgan("dev"));
 
