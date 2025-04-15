@@ -109,8 +109,10 @@ const register = asyncHandler(async (req, res, next) => {
 
 const requestPasswordReset = asyncHandler(async (req, res, next) => {
   const { email } = req.body;
-
-  const user = await User.findOne({ where: { email } });
+  const user = await User.scope("withPassword").findOne({
+    where: { email },
+  });
+  console.log("user", user);
 
   if (!user || !user.password) {
     return next(
